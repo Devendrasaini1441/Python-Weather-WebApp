@@ -43,3 +43,161 @@ If I were to do this project again, there are a few changes I would make. I woul
 - <a target="_blank" href="https://icons8.com/icon/39789/chevron-left">Chevron Left</a> icon by <a target="_blank" href="https://icons8.com">Icons8</a>
 - <a target="_blank" href="https://icons8.com/icon/99362/summer">Summer</a> icon by <a target="_blank" href="https://icons8.com">Icons8</a>
 - <a target="_blank" href="https://icons8.com/icon/akbaie9da2Be/tornado">Tornado</a> icon by <a target="_blank" href="https://icons8.com">Icons8</a>
+---
+###🌦 Python Weather App – Azure Deployment
+🚀 Features
+
+Search weather by city name
+
+Uses Flask (Python) backend
+
+Deployment with GitHub Actions → Azure App Service
+
+Runs using Gunicorn in production
+
+🛠️ Local Setup
+
+Clone the repository:
+```
+git clone https://github.com/Devendrasaini1441/python-weather-app.git
+cd python-weather-app
+```
+---
+###Create & activate a virtual environment:
+```
+python -m venv venv
+source venv/bin/activate   # Mac/Linux
+venv\Scripts\activate      # Windows
+```
+
+Install dependencies:
+```
+pip install -r requirements.txt
+```
+
+Create a .env file in the project root and add your API key:
+```
+OWM_API_KEY=your_openweather_api_key
+```
+
+Run locally (Flask development server):
+```
+flask run
+```
+
+App will run at: http://127.0.0.1:5000
+
+##⚙️ Gunicorn (Production Server)
+
+Azure App Service uses Gunicorn to run Flask apps in production.
+
+Command used in deployment:
+```
+gunicorn --bind=0.0.0.0 --timeout 600 main:app
+```
+
+Here:
+
+main → your Python file (main.py)
+
+app → Flask application object
+
+##🔑 Environment Variables on Azure
+
+After deploying to Azure, go to:
+Azure Portal → App Service → Configuration → Application Settings
+
+Add:
+```
+OWM_API_KEY=your_openweather_api_key
+
+```
+Save & restart your app.
+
+This is a Flask-based Python Weather App that fetches weather information using the OpenWeather API and is deployed to Azure App Service with GitHub Actions.
+
+###☁️ Azure Deployment (With GitHub Actions)
+##1. Create Azure Resources
+```
+Resource Group → weather-rg
+```
+App Service Plan → Linux
+
+App Service (Web App) → python-weather-devendra
+
+##2. Get Publish Profile
+
+In Azure Portal → App Service → Get Publish Profile
+```
+Download the .PublishSettings file
+```
+##3. Add Secret in GitHub
+
+Go to GitHub Repo → Settings → Secrets → Actions → New Secret
+```
+Name: AZURE_WEBAPP_PUBLISH_PROFILE
+```
+Value: Paste contents of .PublishSettings file
+
+##4. GitHub Actions Workflow
+
+Inside .github/workflows/azure-webapp.yml:
+```
+name: Deploy Weather App to Azure
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.9'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Zip artifact for deployment
+      run: zip -r release.zip ./*
+
+    - name: Deploy to Azure Web App
+      uses: azure/webapps-deploy@v3
+      with:
+        app-name: "python-weather-devendra"   # your App Service name
+        publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+        package: release.zip
+
+```
+---
+###🌐 App URL
+
+Once deployed, access your app at:
+👉 https://python-weather-devendra.centralindia.azurewebsites.net
+
+✅ Troubleshooting
+
+500 Internal Server Error → Check logs:
+```
+az webapp log tail --name python-weather-devendra --resource-group weather-rg
+```
+
+Ensure OWM_API_KEY is added under App Settings in Azure Portal.
+
+Check that your main.py has:
+```
+if __name__ == "__main__":
+    app.run()
+```
+
+✨ Now your deployment is automated with GitHub Actions and runs on Gunicorn in Azure.
